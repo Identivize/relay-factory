@@ -5,8 +5,11 @@ Artifacts into their organization's own Google Cloud project and share them
 with the domain. Each publish gets a short-lived Let; unused Artifacts expire
 and the organization controls retention.
 
-Install instructions arrive with the first release. Releases of the `factory`
-CLI, their checksums file and `release.json` are attached to this repository's
+Install documentation is in preparation and will be published to this
+repository's `docs/` with each release. The `v0.1.0-rc.*` releases are
+prereleases that install the project's own first Installation; they are not
+yet recommended for other domains. Releases of the `factory` CLI, their
+checksums file and `release.json` are attached to this repository's
 [GitHub Releases](https://github.com/Identivize/relay-factory/releases).
 The Homebrew cask lives in
 [Identivize/homebrew-tap](https://github.com/Identivize/homebrew-tap).
