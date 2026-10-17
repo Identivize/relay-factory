@@ -82,8 +82,56 @@ one. Releases are ordered as semantic versions: `v0.1.0-rc.3` is older than
 `v0.1.0`, which is older than `v0.2.0`. An Installation never moves back.
 
 A permanent input given with a different value is refused too, as on any
-run: `workspaceDomain`, `region`, `companyHost`, `artifactDomain` and
-`projectPrefix` name the Installation.
+run, with exit 37, `permanent_input`, before preflight and with nothing
+changed: `workspaceDomain`, `region`, `companyHost`, `artifactDomain` and
+`projectPrefix` name the Installation. The message names the input and
+both values; drop it to resume
+([Troubleshooting](troubleshooting.md#exit-37-permanent_input)).
+
+## Changing a mutable input
+
+The inputs that configure the Installation rather than name it are
+changed by a re-run with the input's flag (or a `--config` file with the
+key): the run applies the new value and then stores it, and a later run
+without the flag keeps it.
+
+- `--billing-account <id>`: the three projects are linked to the new
+  account in the run's projects step, and the account is stored then.
+- `--admin-group <email>`: the services carry the new group from the
+  run's second-phase apply (the plan shows the Control API's service
+  updated), and the group is stored once that apply has succeeded. A run
+  held by the `invoker-iam` Handoff, or one whose apply fails, does not
+  store it; the progress says so, and the re-run needs the flag again.
+- `--artifact-capacity <n>`: the `artifact-capacity` Handoff asks for the
+  new quota and is verified against it; stored in the projects step.
+
+Every run's plan lists the changes first, as `Input <key> (<flag>): from
+<stored> to <given>; applied by this run, then stored.`, so `--check`
+with the flag shows what a run would change before it does, and the
+module's change for a new Admin group is not reported as drift. Check
+first, as for any run:
+
+```sh
+factory admin install --check --installation <handle> --admin-group platform-admins@example.com
+factory admin install --installation <handle> --admin-group platform-admins@example.com
+```
+
+`factory admin config get --installation <handle>` prints the stored
+config, with `--json` as the one JSON object the state bucket holds: every
+input as stored, the organization, the three project IDs and the OAuth
+client's ID, and no secret. It reads the state bucket with your `gcloud`
+login, as `install` does. There is no `config set`: the re-run is the
+change.
+
+Five more inputs are accepted and stored for the releases that act on
+them, and the plan and `config get` report them as not yet effective:
+`spendCap` (`--spend-cap <amount>`, a whole number of the billing
+account's currency units; `0` is no cap), `viewingRecords`
+(`--viewing-records`, or `--viewing-records=false`),
+`viewingRecordsRetentionDays` (`--viewing-records-retention-days <days>`),
+`sourceBuilt` (`--source-built`, or `--source-built=false`) and
+`emailSender` (`--email-sender <address>`). Giving one changes nothing in
+the Installation yet ([What v1 does not do](what-v1-does-not-do.md)).
 
 The account that re-runs the installer needs roles in the Installation's
 three projects (what their Owner holds) and the Billing Account User role
@@ -91,10 +139,6 @@ on its billing account; the Project Creator role on the organization is
 needed by the first install only.
 
 ## What this release does not do yet
-
-- **Changing the mutable inputs** (`billingAccount`, `adminGroup`,
-  `artifactCapacity`) on a re-run, and `factory admin config get`. In this
-  release every input is fixed after the first run.
 
 Upgrades are promised between stable releases from `v1.0.0` on. For an
 Installation on a prerelease, the upgrade is tried but not promised; a

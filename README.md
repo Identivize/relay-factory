@@ -5,7 +5,7 @@ Artifacts into their organization's own Google Cloud and share them with the
 domain. Each publish gets a short-lived Let; unused Artifacts expire, and the
 organization controls Retention.
 
-This documentation describes release **v0.1.0-rc.5**. An Installation runs one
+This documentation describes release **v0.1.0-rc.6**. An Installation runs one
 release at a time: if yours runs another one, read the documentation at that
 release's tag, `https://github.com/Identivize/relay-factory/blob/<tag>/README.md`.
 An Installation's release is the one its Operator last installed or

@@ -17,9 +17,10 @@ always safe: it resumes where the last run stopped.
 | `preflight_failed` | 25 | CLI | `factory admin install`: a preflight check is FAIL. Nothing was changed, or at most the control-plane project was created. |
 | `handoff_pending` | 26 | CLI | `factory admin install`: the run did its work and a Handoff is still pending; with `--check`, no check is FAIL but one needs a Handoff. |
 | `preflight_unknown` | 27 | CLI | `factory admin install --check`: no check is FAIL or needs a Handoff, but one could not be checked. |
-| `install_failed` | 28 | CLI | `factory admin install`: a step failed (the rebase pass included), or the plan could not be made (then nothing was changed); the message names it. Re-running resumes. `factory admin rebase`: the pass stopped part way (re-running resumes), or the Installation was applied by a release before the pass existed: run `factory admin install` from this release first. `factory admin status`: the Installation's config or ledger could not be read from the state bucket. |
+| `install_failed` | 28 | CLI | `factory admin install`: a step failed (the rebase pass included), or the plan could not be made (then nothing was changed); the message names it. Re-running resumes. `factory admin rebase`: the pass stopped part way (re-running resumes), or the Installation was applied by a release before the pass existed: run `factory admin install` from this release first. `factory admin status` and `factory admin config get`: the Installation's config or ledger could not be read from the state bucket. |
 | `signature_invalid` | 29 | CLI | `factory admin install`: a release image's signature did not verify. |
 | `older_release` | 30 | CLI | `factory admin install` and `factory admin rebase`: this factory is an older release than the one the Installation runs; an Installation never moves back. Nothing was changed; use that release or a newer one. |
+| `permanent_input` | 37 | CLI | `factory admin install`: a permanent input (`workspaceDomain`, `region`, `companyHost`, `artifactDomain` or `projectPrefix`) was given with a value other than the one the Installation was installed with; the message names it. They name the Installation and cannot be changed by a re-run. Nothing was changed; drop the input to resume. |
 
 <!-- cliref:end -->
 
@@ -100,6 +101,19 @@ Installation never moves back. Nothing was changed. The message names the
 Installation's release: use that one or a newer one
 ([Upgrade](upgrade.md#what-is-refused)).
 
+### Exit 37: `permanent_input`
+
+A re-run gave a permanent input with a value other than the one the
+Installation was installed with: `workspaceDomain`, `region`,
+`companyHost`, `artifactDomain` or `projectPrefix`. They name the
+Installation, so a re-run cannot change them; the message names the input
+and both values. Nothing was changed, not even preflight ran. Drop the
+input (or the key in the `--config` file) to resume. To have another
+domain, host or region, install a new Installation
+([Upgrade](upgrade.md#what-is-refused)). The mutable inputs
+(`billingAccount`, `adminGroup`, `artifactCapacity`) are changed by a
+re-run with the flag ([Upgrade](upgrade.md#changing-a-mutable-input)).
+
 ## Situations
 
 ### A stale Terraform lock
@@ -179,8 +193,9 @@ and which of three things it found:
 - **Google answered 404: the Admin group was not found.** The group
   given as `--admin-group` does not exist in the Workspace account, or
   was renamed or deleted after the install. Create or restore it under
-  that address; in this release the input is fixed by the first run
-  ([Prerequisites](prerequisites.md#names-and-a-region)).
+  that address, or re-run the installer with `--admin-group` naming
+  another group: the input is mutable
+  ([Upgrade](upgrade.md#changing-a-mutable-input)).
 
 A message that the service could not reach the Admin SDK is none of these:
 the service tries again in five minutes on its own.
@@ -206,7 +221,7 @@ or renumbered. Publisher commands' codes are explained on the
 | Code | Exit | From | When |
 |---|---|---|---|
 | `internal` | 1 | API, CLI | Anything else, including a credential store that cannot be read or written, and any code this CLI does not know. |
-| `usage` | 2 | CLI | Bad command line, a host that is not an Installation host, or a malformed link file. `factory admin install`: also a missing or changed input, an unknown Installation, or an OAuth client Google rejects. `factory admin rebase`: an unknown Installation, or one whose install never wrote its config. |
+| `usage` | 2 | CLI | Bad command line, a host that is not an Installation host, or a malformed link file. `factory admin install`: also a missing or invalid input, an unknown Installation, or an OAuth client Google rejects. `factory admin rebase`, `factory admin status` and `factory admin config get`: an unknown Installation, or one whose install never wrote its config. |
 | `unauthenticated` | 3 | API, CLI | Not signed in to the Installation, a sign-in whose OAuth client was replaced, a refresh Google refuses, or an ID token the Control API rejects. Sign in again with `factory login <host>`. |
 | `wrong_domain` | 4 | API, CLI | The Google account has no Workspace domain, or not the Installation's. |
 | `not_publisher` | 5 | API | The Artifact belongs to another Publisher. |
@@ -229,13 +244,17 @@ or renumbered. Publisher commands' codes are explained on the
 | `preflight_failed` | 25 | CLI | `factory admin install`: a preflight check is FAIL. Nothing was changed, or at most the control-plane project was created. |
 | `handoff_pending` | 26 | CLI | `factory admin install`: the run did its work and a Handoff is still pending; with `--check`, no check is FAIL but one needs a Handoff. |
 | `preflight_unknown` | 27 | CLI | `factory admin install --check`: no check is FAIL or needs a Handoff, but one could not be checked. |
-| `install_failed` | 28 | CLI | `factory admin install`: a step failed (the rebase pass included), or the plan could not be made (then nothing was changed); the message names it. Re-running resumes. `factory admin rebase`: the pass stopped part way (re-running resumes), or the Installation was applied by a release before the pass existed: run `factory admin install` from this release first. `factory admin status`: the Installation's config or ledger could not be read from the state bucket. |
+| `install_failed` | 28 | CLI | `factory admin install`: a step failed (the rebase pass included), or the plan could not be made (then nothing was changed); the message names it. Re-running resumes. `factory admin rebase`: the pass stopped part way (re-running resumes), or the Installation was applied by a release before the pass existed: run `factory admin install` from this release first. `factory admin status` and `factory admin config get`: the Installation's config or ledger could not be read from the state bucket. |
 | `signature_invalid` | 29 | CLI | `factory admin install`: a release image's signature did not verify. |
 | `older_release` | 30 | CLI | `factory admin install` and `factory admin rebase`: this factory is an older release than the one the Installation runs; an Installation never moves back. Nothing was changed; use that release or a newer one. |
+| `not_expired` | 31 | API | `factory restore`: the Artifact is live, so there is nothing to restore; publish or renew it instead. |
+| `restore_disabled` | 32 | API | `factory restore`: this Installation does not let Publishers restore their own Artifacts; ask an Admin to restore it. |
 | `renewals_exhausted` | 33 | API | `factory renew`: the Artifact has used the idle Renewals the Installation allows per Let; publish again to start a fresh Let. |
-| `not_admin` | 34 | API | `factory admin policy` and `factory admin status`: the member signed in is not a member of the Admin group (`RELAY_ADMIN_GROUP`). Sign in as an Admin, or ask one. |
+| `not_admin` | 34 | API | `factory admin policy`, `factory admin status`, `factory transfer` and `factory restore --publisher`: the member signed in is not a member of the Admin group (`RELAY_ADMIN_GROUP`). Sign in as an Admin, or ask one. |
 | `not_live` | 35 | API | `factory end` and `factory renew`: the Artifact has no running Let (never live, or Expired already). Its link is already down; publish again to bring it back. |
 | `source_built_disabled` | 36 | API | The `factory.yaml` declares `streamlit` or `python` and this Installation does not build apps from source (the capability is not installed or the Admin switch is off); only `static` publishes. |
+| `permanent_input` | 37 | CLI | `factory admin install`: a permanent input (`workspaceDomain`, `region`, `companyHost`, `artifactDomain` or `projectPrefix`) was given with a value other than the one the Installation was installed with; the message names it. They name the Installation and cannot be changed by a re-run. Nothing was changed; drop the input to resume. |
+| `nothing_retained` | 38 | API | `factory restore`: the Artifact has no retained bundle (never live, its Retention has passed, or the bundle is gone); publish it again. |
 | `interrupted` | 130 | CLI | SIGINT or SIGTERM stopped the command. A Revision already committed may still go live. |
 
 <!-- cliref:end -->

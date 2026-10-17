@@ -15,7 +15,7 @@ your OS and architecture (`darwin_amd64`, `linux_amd64`, `linux_arm64`,
 `windows_amd64.zip`, `windows_arm64.zip`).
 
 ```sh
-gh release download v0.1.0-rc.5 --repo Identivize/relay-factory --pattern 'factory_*_darwin_arm64.tar.gz' --pattern checksums.txt --pattern checksums.txt.sigstore.json
+gh release download v0.1.0-rc.6 --repo Identivize/relay-factory --pattern 'factory_*_darwin_arm64.tar.gz' --pattern checksums.txt --pattern checksums.txt.sigstore.json
 ```
 
 The checksums file is signed by the release workflow (cosign keyless): the
@@ -25,7 +25,7 @@ then the archive against the checksums.
 ```sh
 cosign verify-blob \
   --bundle checksums.txt.sigstore.json \
-  --certificate-identity 'https://github.com/Identivize/relay-artifactory/.github/workflows/release.yml@refs/tags/v0.1.0-rc.5' \
+  --certificate-identity 'https://github.com/Identivize/relay-artifactory/.github/workflows/release.yml@refs/tags/v0.1.0-rc.6' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   checksums.txt
 ```
@@ -172,7 +172,7 @@ The run exits **0** when the Installation is ready: the `dns` and
 `oauth-client` Handoffs are verified and the Front Door's discovery
 document, `https://<company-host>/.well-known/relay-factory.json`, answers
 with the Control API's URL and the OAuth client. The report then says
-`Installation <handle> (release v0.1.0-rc.5) is ready.` with every check `ok`,
+`Installation <handle> (release v0.1.0-rc.6) is ready.` with every check `ok`,
 every step `done` and each Handoff `done`, except that
 `artifact-capacity` may still be pending: it waits on Google's review of
 the quota request and never holds the Installation up. Until it is
@@ -224,7 +224,7 @@ factory admin install [--check] [--installation <control-plane-project>]
 |---|---|
 | `--check` | plan the run and change nothing: the preflight checks, the Handoffs, and what the run would create, copy, migrate and apply |
 | `--installation <project>` | the control-plane project ID of an Installation to resume or check |
-| `--config <file>` | a JSON object of inputs, keyed workspaceDomain, billingAccount, region, companyHost, artifactDomain, adminGroup, artifactCapacity, projectPrefix |
+| `--config <file>` | a JSON object of inputs, keyed workspaceDomain, billingAccount, region, companyHost, artifactDomain, adminGroup, artifactCapacity, projectPrefix, spendCap, viewingRecords, viewingRecordsRetentionDays, sourceBuilt, emailSender |
 | `--wait <duration>` | keep verifying a pending DNS Handoff for up to this long (default 0: verify once) |
 | `--json` | print the report as one JSON object on stdout |
 
@@ -232,14 +232,24 @@ factory admin install [--check] [--installation <control-plane-project>]
 
 | Flag | Meaning |
 |---|---|
-| `--workspace-domain <domain>` | the Google Workspace domain (required) |
-| `--billing-account <id>` | the billing account to link (required) |
+| `--workspace-domain <domain>` | the Google Workspace domain; permanent (required) |
+| `--billing-account <id>` | the billing account to link; mutable (required) |
 | `--region <region>` | the Installation's region; permanent (required) |
-| `--company-host <host>` | the Front Door's host (required) |
-| `--admin-group <email>` | the Admin Google Group (required) |
-| `--artifact-domain <domain>` | parent of each Artifact's host (default a.&lt;company-host&gt;) |
-| `--artifact-capacity <n>` | how many Artifacts to request quota for (default 4000) |
-| `--project-prefix <prefix>` | prefix of the three project IDs (default relay-factory) |
+| `--company-host <host>` | the Front Door's host; permanent (required) |
+| `--admin-group <email>` | the Admin Google Group; mutable (required) |
+| `--artifact-domain <domain>` | parent of each Artifact's host; permanent (default a.&lt;company-host&gt;) |
+| `--artifact-capacity <n>` | how many Artifacts to request quota for; mutable (default 4000) |
+| `--project-prefix <prefix>` | prefix of the three project IDs; permanent (default relay-factory) |
+
+**Inputs of later releases (mutable; stored, not yet effective)**
+
+| Flag | Meaning |
+|---|---|
+| `--spend-cap <amount>` | the monthly Spend cap, a whole number of the billing account's currency units; 0 is no cap |
+| `--viewing-records` | keep viewing records (--viewing-records=false turns them off) |
+| `--viewing-records-retention-days <days>` | how long viewing records are kept |
+| `--source-built` | install source-built apps (--source-built=false turns them off) |
+| `--email-sender <address>` | the mailbox the Installation sends mail as |
 
 **Completing the oauth-client Handoff**
 

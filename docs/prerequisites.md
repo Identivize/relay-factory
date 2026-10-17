@@ -40,24 +40,31 @@ installer has no built-in domain, organization or owner.
 
 ## Names and a region
 
-| Input | Flag | Required | What to decide |
-|---|---|---|---|
-| `workspaceDomain` | `--workspace-domain` | yes | The Workspace domain; the organization is looked up from it. |
-| `billingAccount` | `--billing-account` | yes | The billing account to link the projects to. |
-| `region` | `--region` | yes | The Installation's Google Cloud region. **Permanent:** the Firestore database and the buckets are created there. Choose it on purpose. |
-| `companyHost` | `--company-host` | yes | The Front Door's host, for example `artifacts.example.com`: where Publishers sign in, where members open the Hub (`https://<companyHost>/app/`) and every shareable link starts. You must be able to create DNS records for it. |
-| `artifactDomain` | `--artifact-domain` | no | The parent of every Artifact's own host, `<id>.<artifactDomain>`. Default `a.<companyHost>`. You must be able to create a wildcard record under it. |
-| `adminGroup` | `--admin-group` | yes | The Admin Google Group's email. |
-| `artifactCapacity` | `--artifact-capacity` | no | How many Artifacts to request Cloud Run quota for. Default 4000. |
-| `projectPrefix` | `--project-prefix` | no | The prefix of the three project IDs. Default `relay-factory`. |
+| Input | Flag | Required | Permanent | What to decide |
+|---|---|---|---|---|
+| `workspaceDomain` | `--workspace-domain` | yes | yes | The Workspace domain; the organization is looked up from it. |
+| `billingAccount` | `--billing-account` | yes | no | The billing account to link the projects to. |
+| `region` | `--region` | yes | yes | The Installation's Google Cloud region: the Firestore database and the buckets are created there. Choose it on purpose. |
+| `companyHost` | `--company-host` | yes | yes | The Front Door's host, for example `artifacts.example.com`: where Publishers sign in, where members open the Hub (`https://<companyHost>/app/`) and every shareable link starts. You must be able to create DNS records for it. |
+| `artifactDomain` | `--artifact-domain` | no | yes | The parent of every Artifact's own host, `<id>.<artifactDomain>`. Default `a.<companyHost>`. You must be able to create a wildcard record under it. |
+| `adminGroup` | `--admin-group` | yes | no | The Admin Google Group's email. |
+| `artifactCapacity` | `--artifact-capacity` | no | no | How many Artifacts to request Cloud Run quota for. Default 4000. |
+| `projectPrefix` | `--project-prefix` | no | yes | The prefix of the three project IDs. Default `relay-factory`. |
 
 The inputs can be flags, or a JSON file given with `--config` whose keys
 are the first column; a flag wins over the file. The installer never
-prompts. In this release every input is fixed by the first run: a later
-run that gives any of them a different value is refused. `workspaceDomain`,
-`region`, `companyHost`, `artifactDomain` and `projectPrefix` stay
-permanent for good; the others become changeable in a later release
-([Upgrade](upgrade.md#what-this-release-does-not-do-yet)).
+prompts. A **permanent** input names the Installation: a later run that
+gives it a different value is refused (exit 37, `permanent_input`) and
+changes nothing. A **mutable** one configures it: a later run that gives
+it a new value applies the value and then stores it
+([Upgrade](upgrade.md#changing-a-mutable-input)).
+
+Five more inputs, all mutable, are accepted and stored for the releases
+that act on them, and reported as not yet effective until then: `spendCap`
+(`--spend-cap`), `viewingRecords` (`--viewing-records`),
+`viewingRecordsRetentionDays` (`--viewing-records-retention-days`),
+`sourceBuilt` (`--source-built`) and `emailSender` (`--email-sender`)
+([What v1 does not do](what-v1-does-not-do.md)).
 
 The three projects are `<prefix>-cp-<suffix>` (the control plane, whose ID
 is the Installation's handle), `<prefix>-art-<suffix>` (the Artifacts) and

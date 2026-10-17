@@ -53,20 +53,25 @@ Each later release of v1 adds its part; this release has none of these:
 - The Admin's override of a Publisher's Artifact, and the Admin's read of
   the Activity records; `factory admin policy get|set` and `factory admin
   status` are in this release ([Admin](admin.md)).
-- `factory admin uninstall`, `factory admin end` and `factory admin config
-  get`, and changing the mutable inputs on a re-run
-  ([Upgrade](upgrade.md)).
+- `factory admin uninstall` and `factory admin end`. (Changing a mutable
+  input on a re-run and `factory admin config get` are in this release:
+  [Upgrade](upgrade.md#changing-a-mutable-input).)
 - Pre-created projects (an Operator who is Owner of existing projects but
   not a Project Creator).
 - The Spend cap, the Paused state, the Usage limits per Publisher, and
   email: the Spend cap and email are Operator inputs, with the email
-  sender's own Handoff.
-- The viewing-records switch and its retention. (The Groups Reader
-  Handoff is in this release: [Groups Reader](handoffs/groups-reader.md).)
+  sender's own Handoff. The installer already accepts and stores
+  `--spend-cap` and `--email-sender`, and does nothing with them yet
+  ([Upgrade](upgrade.md#changing-a-mutable-input)).
+- The viewing-records switch and its retention, and the source-built
+  switch: `--viewing-records`, `--viewing-records-retention-days` and
+  `--source-built` are accepted and stored the same way. (The Groups
+  Reader Handoff is in this release: [Groups
+  Reader](handoffs/groups-reader.md).)
 - The Hub's pages beyond My Artifacts (Shared with me, Across the
   domain, an Artifact's page and its actions, the Publish page, All
   Artifacts for Admins, Restore Requests, branding), named shares
-  (`factory share`, `factory unshare`), Restore from the CLI,
+  (`factory share`, `factory unshare`),
   and source-built apps: `factory.yaml` already accepts `kind:
   streamlit` and `kind: python`, and the Installation refuses them with
   `source_built_disabled` until then.

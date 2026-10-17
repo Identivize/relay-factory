@@ -25,13 +25,13 @@ Or download a release archive for your machine and verify it. Replace
 `linux_arm64`, `windows_amd64.zip`, `windows_arm64.zip`):
 
 ```sh
-gh release download v0.1.0-rc.5 --repo Identivize/relay-factory --pattern 'factory_*_darwin_arm64.tar.gz' --pattern checksums.txt --pattern checksums.txt.sigstore.json
+gh release download v0.1.0-rc.6 --repo Identivize/relay-factory --pattern 'factory_*_darwin_arm64.tar.gz' --pattern checksums.txt --pattern checksums.txt.sigstore.json
 ```
 
 ```sh
 cosign verify-blob \
   --bundle checksums.txt.sigstore.json \
-  --certificate-identity 'https://github.com/Identivize/relay-artifactory/.github/workflows/release.yml@refs/tags/v0.1.0-rc.5' \
+  --certificate-identity 'https://github.com/Identivize/relay-artifactory/.github/workflows/release.yml@refs/tags/v0.1.0-rc.6' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   checksums.txt
 ```
@@ -180,8 +180,36 @@ may be renewed a bounded number of times (the Installation's policy, 2 by
 default); at the cap the renew is `renewals_exhausted`, and publishing
 again starts a fresh Let. The argument is the linked folder (default: the
 current folder) or an Artifact ID. An Artifact with no running Let is
-`not_live`: an Expired Artifact is published again, not renewed. Nothing
-is written locally and no email is sent.
+`not_live`: an Expired Artifact is restored or published again, not
+renewed. Nothing is written locally and no email is sent.
+
+## Restore
+
+```sh
+factory restore ./site
+```
+
+Brings your Expired Artifact back from the bundle the Installation kept
+when its Let ended, with nothing to upload: the content is the Revision
+that was live when it expired, at the same address, with the same title
+and the same Viewers. It is a publish without the upload, and it behaves
+like one: the command waits for the restored Revision to go live (up to
+`--timeout`, 16 minutes by default; `--no-wait` returns at once and
+`factory status --wait` waits later), then prints the link, who can view
+it, and with `--json` the same object `publish` prints, with `created`
+`false`. The restored Let starts fresh at the Installation's default
+length; `--let 2d` asks for a shorter one. The argument is the linked
+folder (default: the current folder) or an Artifact ID. Restore when the
+content is unchanged; publish again when it changed.
+
+Three refusals are the Restore's own: `not_expired` (31) when the Artifact
+is live (renew it, or publish), `restore_disabled` (32) when the
+Installation does not let Publishers restore their own Artifacts (ask an
+Admin, who restores any Artifact with the same command), and
+`nothing_retained` (38) when there is no bundle to restore (the Artifact
+was never live, its Retention has passed, or the bundle is gone): publish
+it again. A publish of it in flight is `deploy_in_progress`. Nothing is
+written locally and no email is sent.
 
 ## End
 
@@ -234,16 +262,20 @@ skills are in this repository's `skills/` folder, for `gh skill install`,
 | `factory logout` | Sign out of an Installation and forget its Sign-in |
 | `factory publish` | Publish a folder as a new Revision of its Artifact |
 | `factory renew` | Renew the Let of your own Artifact without publishing |
+| `factory restore` | Bring an Expired Artifact back from its retained bundle, as a publish |
 | `factory skills install` | Write the skills to each agent's skills directory |
 | `factory skills status` | Compare each installed skill's version with this factory's |
 | `factory skills uninstall` | Remove what "factory skills install" wrote |
 | `factory status` | Report the Installation, the Sign-in and the folder's Artifact |
+| `factory transfer` | Give an Artifact to another Publisher (Admins only) |
 | `factory version` | Print the release this factory was built from |
 
 <!-- cliref:end -->
 
-`factory admin install` is the Operator's command ([Install](install.md)).
-`factory help <command>` prints a command's flags.
+`factory admin install` is the Operator's command ([Install](install.md));
+`factory transfer` is an Admin's, giving an Artifact to another Publisher
+([Admin](admin.md#transfer-an-artifact)). `factory help <command>` prints
+a command's flags.
 
 ### `factory login`
 
@@ -339,6 +371,28 @@ factory renew [dir|id] [--let <duration>] [--installation <host>] [--json]
 | Flag | Meaning |
 |---|---|
 | `--let <duration>` | the Let's length from now, 2d, 36h or 1d12h, instead of the default; at most the Installation's maximum |
+| `--installation <host>` | the Installation the Artifact is on |
+| `--json` | print the result as one JSON object on stdout |
+
+<!-- cliref:end -->
+
+### `factory restore`
+
+<!-- cliref:begin flags restore -->
+
+```
+factory restore [dir|id] [--publisher <email>] [--let <duration>] [--no-wait]
+                [--timeout <duration>] [--installation <host>] [--json]
+```
+
+**Flags**
+
+| Flag | Meaning |
+|---|---|
+| `--publisher <email>` | give the Artifact to this member as it comes back (Admins only) |
+| `--let <duration>` | the Let's length, 2d, 36h or 1d12h, instead of the default; at most the Installation's maximum |
+| `--no-wait` | return once the Revision is committed, without waiting for it to go live |
+| `--timeout <duration>` | how long to wait for the Revision to go live (default 16m0s) |
 | `--installation <host>` | the Installation the Artifact is on |
 | `--json` | print the result as one JSON object on stdout |
 
@@ -444,7 +498,7 @@ own. The installer's codes are on the
 | Code | Exit | From | When |
 |---|---|---|---|
 | `internal` | 1 | API, CLI | Anything else, including a credential store that cannot be read or written, and any code this CLI does not know. |
-| `usage` | 2 | CLI | Bad command line, a host that is not an Installation host, or a malformed link file. `factory admin install`: also a missing or changed input, an unknown Installation, or an OAuth client Google rejects. `factory admin rebase`: an unknown Installation, or one whose install never wrote its config. |
+| `usage` | 2 | CLI | Bad command line, a host that is not an Installation host, or a malformed link file. `factory admin install`: also a missing or invalid input, an unknown Installation, or an OAuth client Google rejects. `factory admin rebase`, `factory admin status` and `factory admin config get`: an unknown Installation, or one whose install never wrote its config. |
 | `unauthenticated` | 3 | API, CLI | Not signed in to the Installation, a sign-in whose OAuth client was replaced, a refresh Google refuses, or an ID token the Control API rejects. Sign in again with `factory login <host>`. |
 | `wrong_domain` | 4 | API, CLI | The Google account has no Workspace domain, or not the Installation's. |
 | `not_publisher` | 5 | API | The Artifact belongs to another Publisher. |
@@ -464,17 +518,19 @@ own. The installer's codes are on the
 | `revision_failed` | 22 | CLI | The Revision was uploaded and its deploy failed (`publish`, or `status --wait` on it); the message is its failure reason (a bundle the build step refused, its manifest or kind included). |
 | `wait_timeout` | 23 | CLI | The Revision was not live or failed when `--timeout` passed (`publish`, or `status --wait` on it). |
 | `login_failed` | 24 | CLI | The sign-in was refused, abandoned, timed out, or Google's answer lacked what is needed. |
+| `not_expired` | 31 | API | `factory restore`: the Artifact is live, so there is nothing to restore; publish or renew it instead. |
+| `restore_disabled` | 32 | API | `factory restore`: this Installation does not let Publishers restore their own Artifacts; ask an Admin to restore it. |
 | `renewals_exhausted` | 33 | API | `factory renew`: the Artifact has used the idle Renewals the Installation allows per Let; publish again to start a fresh Let. |
-| `not_admin` | 34 | API | `factory admin policy` and `factory admin status`: the member signed in is not a member of the Admin group (`RELAY_ADMIN_GROUP`). Sign in as an Admin, or ask one. |
+| `not_admin` | 34 | API | `factory admin policy`, `factory admin status`, `factory transfer` and `factory restore --publisher`: the member signed in is not a member of the Admin group (`RELAY_ADMIN_GROUP`). Sign in as an Admin, or ask one. |
 | `not_live` | 35 | API | `factory end` and `factory renew`: the Artifact has no running Let (never live, or Expired already). Its link is already down; publish again to bring it back. |
 | `source_built_disabled` | 36 | API | The `factory.yaml` declares `streamlit` or `python` and this Installation does not build apps from source (the capability is not installed or the Admin switch is off); only `static` publishes. |
+| `nothing_retained` | 38 | API | `factory restore`: the Artifact has no retained bundle (never live, its Retention has passed, or the bundle is gone); publish it again. |
 | `interrupted` | 130 | CLI | SIGINT or SIGTERM stopped the command. A Revision already committed may still go live. |
 
 <!-- cliref:end -->
 
 ## Not in this release
 
-Named shares (`factory share`, `factory unshare`), Restore of an expired
-Artifact and the Hub's pages beyond My Artifacts are v1 features that
-later releases add
+Named shares (`factory share`, `factory unshare`) and the Hub's pages
+beyond My Artifacts are v1 features that later releases add
 ([What v1 does not do](what-v1-does-not-do.md)).

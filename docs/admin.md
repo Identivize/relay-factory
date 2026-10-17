@@ -22,7 +22,7 @@ a new release adds appears at its default. Its fields, by the names
 | `maxIdleRenewals` | 2 | How many times a Let may be renewed without a new Revision. |
 | `retentionDays` | 0 | How long an Expired Artifact's bundle is kept: `0` for none past the sweep that expires it, a number of days, or `-1` for indefinite. |
 | `expiryWarningLeadSeconds` | 2 days | How long before a Let ends its Publisher is warned. |
-| `publisherSelfRestore` | `true` | A Publisher may restore their own Expired Artifact; off, Restore Requests go to Admins. |
+| `publisherSelfRestore` | `true` | A Publisher may restore their own Expired Artifact (`factory restore`); off, their attempt is refused with `restore_disabled` and only an Admin restores it. |
 | `restoreRequestButton` | `true` | The expired page offers a Restore Request. |
 | `listedByDefault` | `false` | A new Artifact open to the whole domain is Listed. |
 | `errorRedirect` | empty | Where the expired and not-found outcomes send a Viewer instead of the built-in pages: an absolute `https` URL of the organization's own. Empty means the built-in pages, which say why the link does not answer. |
@@ -74,10 +74,11 @@ read-only) comes in a later release: the Hub at
   is an Admin by asking Google whether the member is in the Admin group
   (the [Groups Reader Handoff](handoffs/groups-reader.md) gives it the
   right to ask), and it lets an Admin read any Artifact, not only their
-  own. `factory status` reads the Artifact a folder is linked to, so no
-  command exercises this yet; the Admin commands that use it come with
-  their releases. A member whose address is a service account is never
-  an Admin.
+  own. `factory transfer`, `factory restore --publisher`
+  ([Transfer an Artifact](#transfer-an-artifact)), `factory admin policy`
+  and `factory admin status` need it; the rest of the Admin commands come
+  with their releases. A member whose address is a service account is
+  never an Admin.
 - **The Installation's state** is `factory admin status --installation
   <handle>`: the release the installer recorded, whether the Installation
   is ready, each Handoff's status, the services' readiness as the Control
@@ -88,7 +89,50 @@ read-only) comes in a later release: the Hub at
   per Publisher, email and the serving state are not yet available in
   this release; the report says so. The Operator's `factory admin install
   --check --installation <handle>` still shows the plan: what a run would
-  change, which on a ready Installation is nothing.
+  change, which on a ready Installation is nothing; and `factory admin
+  config get --installation <handle>` prints the inputs the install
+  stored, which only a re-run of the installer changes
+  ([Upgrade](upgrade.md#changing-a-mutable-input)).
+
+## Transfer an Artifact
+
+```sh
+factory transfer q3-roadmap-x7k2q9 bob@example.com
+```
+
+Gives the Artifact to another member of the Workspace, who becomes its
+Publisher: the one who renews, ends, restores and republishes it. The
+Artifact changes hands in whatever state it is, live, Expired or never
+live, and nothing else moves: its address, its Let, its Viewers and its
+Revisions stay as they are. Only an Admin may do it; anyone else gets
+`not_admin` (exit 34). The address must be one of the Workspace domain and
+not the current Publisher's. The new Publisher is not emailed in this
+release; tell them.
+
+```sh
+factory restore q3-roadmap-x7k2q9 --publisher bob@example.com
+```
+
+Restores an Expired Artifact and gives it to another member in one step:
+it comes back live as that member's, from the bundle the Installation
+retained ([Restore](publisher.md#restore)). Without `--publisher`, an
+Admin's `factory restore` restores any member's Artifact for that member,
+whether or not the Installation lets Publishers restore their own.
+
+<!-- cliref:begin flags transfer -->
+
+```
+factory transfer <id> <email> [--installation <host>] [--json]
+```
+
+**Flags**
+
+| Flag | Meaning |
+|---|---|
+| `--installation <host>` | the Installation the Artifact is on |
+| `--json` | print the result as one JSON object on stdout |
+
+<!-- cliref:end -->
 
 ## The commands under `factory admin` in this release
 
@@ -97,6 +141,7 @@ read-only) comes in a later release: the Hub at
 | Command | Summary |
 |---|---|
 | `factory admin install` | Install an Installation, or resume its install |
+| `factory admin config get` | Print an Installation's stored config: its inputs, organization, projects |
 | `factory admin policy get` | Print the Installation's policy, every field with its default |
 | `factory admin policy set` | Change fields of the Installation's policy |
 | `factory admin rebase` | Redeploy every live Artifact onto the release's base image (for Operators) |
@@ -113,8 +158,10 @@ Operator.
 `factory admin install` and `factory admin rebase` are the Operator's:
 installing and upgrading, and the upgrade's rebase pass again
 ([Upgrade](upgrade.md#the-rebase-pass)); `policy get`, `policy set` and
-`status` are the Admin's. Each later release of v1 adds the rest: the
-override that lets an Admin end, transfer or re-share any Artifact, the
-Admin's read of the Activity records, the Spend cap, the usage per
-Publisher and email in `status`, and the Hub's remaining pages
+`status` are the Admin's, as are `factory transfer` and `factory restore
+--publisher` ([Transfer an Artifact](#transfer-an-artifact)). Each later
+release of v1 adds the rest: the override that lets an Admin end or
+re-share any Artifact, the Admin's read of the Activity records, the
+Spend cap, the usage per Publisher and email in `status`, and the Hub's
+remaining pages
 ([What v1 does not do](what-v1-does-not-do.md#in-v1-not-in-this-release)).
