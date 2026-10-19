@@ -1,0 +1,13 @@
+{
+  "name": "relay-factory",
+  "description": "Relay Factory agent skills: factory for Publishers, factory-admin for Admins and Operators",
+  "owner": { "name": "Identivize" },
+  "plugins": [
+    {
+      "name": "factory",
+      "source": "./",
+      "description": "Relay Factory skills for Publishers and Admins",
+      "skills": ["./skills/factory", "./skills/factory-admin"]
+    }
+  ]
+}
