@@ -14,12 +14,13 @@ The second list is what v1 will do and this release does not have yet.
   The shareable link is `https://<company-host>/a/<id>`: it redirects to the
   origin while the Artifact is live and shows the expired page afterwards,
   so hand out `/a/<id>` links, never the origin.
-- **Uninstall is a project delete.** Removing an Installation deletes its
-  three projects, with Google's 30-day undelete as the only recovery and no
-  export of Artifacts or records. The two cleanups the delete cannot do are
-  manual: remove the four DNS records, and revoke any delegation granted
-  outside the projects. (The `factory admin uninstall` command itself is not
-  in this release; see below.)
+- **Uninstall is a project delete.** `factory admin uninstall` deletes
+  the Installation's projects, with Google's 30-day undelete as the
+  only recovery and no export of Artifacts or records; projects you
+  pre-created are emptied of the Installation's resources and left in
+  place instead. The two cleanups the delete cannot do are manual, and the
+  command prints them: revoke the email sender's delegation, and remove
+  the four DNS records ([Uninstall](uninstall.md)).
 - **A fresh install means the four DNS records again.** Reinstalling
   creates new projects and a new load balancer with a new address; the two
   CNAMEs and two A records must be edited by hand. There is no DNS
@@ -30,15 +31,20 @@ The second list is what v1 will do and this release does not have yet.
   and not-found outcomes at a URL of the organization's own instead
   (`errorRedirect`, [Admin](admin.md)).
 - **No money ceiling without a Spend cap.** The Spend cap is the Operator's
-  installer input, and this release does not have it yet, nor the cap of
-  three instances per static Artifact that v1 adds beside it: an
-  Installation's spending has no ceiling of Relay Factory's. Set a budget
-  on the three projects in Google's console meanwhile.
+  installer input, `--spend-cap` ([Install](install.md#spend-cap)): one
+  Google budget that caps Cloud Run spend in the Artifacts project. An
+  Installation whose Operator set none has no money ceiling of Relay
+  Factory's: its bill is bounded by its live Artifacts alone. The cap of
+  three instances per static Artifact that v1 adds beside it is not in
+  this release.
 - **Viewing is Google's log, not Relay Factory's.** Whoever can read
   private logs in the Artifacts project can read who viewed what for the
-  last 30 days. The optional Viewing records (an Operator switch, not in
-  this release) copy those entries into a dataset of the organization's
-  own; entries in the sink's first minute can be lost.
+  last 30 days. The optional [viewing records](install.md#viewing-records)
+  (an Operator switch) keep a thin copy of those entries in BigQuery in
+  the Artifacts project, read through the datasets' sharing, which the
+  Operator controls; entries in the sink's first minute can be lost.
+  With the records on, the Hub shows Admins counts only (views, distinct
+  Viewers and the last view), never who.
 - **Google identities only.** Viewers are members of the Workspace domain,
   signed in with Google. There are no other identity providers, no
   anonymous viewing and no sharing outside the domain.
@@ -50,31 +56,28 @@ The second list is what v1 will do and this release does not have yet.
 
 Each later release of v1 adds its part; this release has none of these:
 
-- The Admin's override of a Publisher's Artifact, and the Admin's read of
-  the Activity records; `factory admin policy get|set` and `factory admin
-  status` are in this release ([Admin](admin.md)).
-- `factory admin uninstall` and `factory admin end`. (Changing a mutable
-  input on a re-run and `factory admin config get` are in this release:
-  [Upgrade](upgrade.md#changing-a-mutable-input).)
-- Pre-created projects (an Operator who is Owner of existing projects but
-  not a Project Creator).
-- The Spend cap, the Paused state, the Usage limits per Publisher, and
-  email: the Spend cap and email are Operator inputs, with the email
-  sender's own Handoff. The installer already accepts and stores
-  `--spend-cap` and `--email-sender`, and does nothing with them yet
-  ([Upgrade](upgrade.md#changing-a-mutable-input)).
-- The viewing-records switch and its retention, and the source-built
-  switch: `--viewing-records`, `--viewing-records-retention-days` and
-  `--source-built` are accepted and stored the same way. (The Groups
-  Reader Handoff is in this release: [Groups
-  Reader](handoffs/groups-reader.md).)
-- The Hub's pages beyond My Artifacts (Shared with me, Across the
-  domain, an Artifact's page and its actions, the Publish page, All
-  Artifacts for Admins, Restore Requests, branding), named shares
-  (`factory share`, `factory unshare`),
-  and source-built apps: `factory.yaml` already accepts `kind:
-  streamlit` and `kind: python`, and the Installation refuses them with
-  `source_built_disabled` until then.
+- The Admin's read of the Activity records; the Admin's override of a
+  Publisher's Artifact (read, renew, restore, transfer, share and end),
+  `factory admin policy get|set`, `factory admin status` and `factory
+  admin end` are in this release ([Admin](admin.md)).
+  (Changing a mutable input on a re-run, `factory admin config get` and
+  `factory admin uninstall` are in this release too:
+  [Upgrade](upgrade.md#changing-a-mutable-input),
+  [Uninstall](uninstall.md).)
+- Some of the mails. The sender and its [Email](handoffs/email.md)
+  Handoff are built, `factory admin status` says whether email is on, and
+  the Admin-change mails are sent (an Admin's Transfer, Restore, Early
+  end, share, unshare, listing or unlisting of a member's Artifact mails
+  that Publisher, [Admin](admin.md)), as are the Share mail to the members
+  and groups a share newly names ([Publisher](publisher.md#share)),
+  the expiry mails to a Publisher whose Let ends soon or has ended
+  ([Publisher](publisher.md#renew)) and the Restore Request mail to a
+  Publisher or the Admin group ([Publisher](publisher.md#restore-requests)),
+  as are the mails to the Admin group when the Installation is Paused and
+  when it serves again, and the capacity warning to the Admin group at
+  80 % of the Cloud Run services quota ([Admin](admin.md)).
+- Telling the members who made a Restore Request what became of it: the
+  Artifact's link simply works again once it is back.
 
 Each is listed here until the release that carries it, whose
 documentation then describes it.

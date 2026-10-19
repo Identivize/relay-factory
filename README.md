@@ -5,7 +5,7 @@ Artifacts into their organization's own Google Cloud and share them with the
 domain. Each publish gets a short-lived Let; unused Artifacts expire, and the
 organization controls Retention.
 
-This documentation describes release **v0.1.0-rc.6**. An Installation runs one
+This documentation describes release **v0.1.0-rc.10**. An Installation runs one
 release at a time: if yours runs another one, read the documentation at that
 release's tag, `https://github.com/Identivize/relay-factory/blob/<tag>/README.md`.
 An Installation's release is the one its Operator last installed or
@@ -20,14 +20,17 @@ run with another release's `factory` names it in the `release` check.
   who complete them ([DNS](docs/handoffs/dns.md),
   [OAuth client](docs/handoffs/oauth-client.md),
   [Groups Reader](docs/handoffs/groups-reader.md),
+  [Email](docs/handoffs/email.md),
   [Artifact capacity](docs/handoffs/artifact-capacity.md),
   [Invoker IAM](docs/handoffs/invoker-iam.md)). Later:
-  [Upgrade](docs/upgrade.md), [Troubleshooting](docs/troubleshooting.md) and
+  [Upgrade](docs/upgrade.md), [Uninstall](docs/uninstall.md),
+  [Troubleshooting](docs/troubleshooting.md) and
   [What v1 does not do](docs/what-v1-does-not-do.md).
 - **Admins** are the members of the Installation's Admin Google Group:
   [Admin](docs/admin.md).
 - **Publishers** are members of the domain who publish folders with the
-  `factory` CLI: [Publisher](docs/publisher.md). A coding agent learns the
+  `factory` CLI, or a page from the Hub's Publish page:
+  [Publisher](docs/publisher.md). A coding agent learns the
   CLI from the skills `factory` carries (`factory skills install`,
   [Agent skills](docs/publisher.md#agent-skills)).
 

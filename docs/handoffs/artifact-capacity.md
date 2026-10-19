@@ -33,4 +33,8 @@ The Cloud Quotas API reports both quotas at or above the target. Until
 then the report shows the Handoff as pending with a `Now:` line giving the
 current quotas and the target. Nothing else waits for it: the ready report
 and exit 0 do not depend on this Handoff, and it is verified again on every
-run of `factory admin install --installation <handle>`.
+run of `factory admin install --installation <handle>`. The Installation
+itself does not wait for a re-run either: its Control API reads the
+services quota live, so a grant counts once Google reports it, at the
+next publish or status check, and `factory admin status` shows the quota
+in force.

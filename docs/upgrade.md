@@ -56,7 +56,12 @@ step say what is happening. Stopping the run (Ctrl-C) is safe; running it
 again resumes. While an Artifact's own redeploy runs, about a minute, a
 publish or early end of that Artifact is refused as "deploy in progress";
 try again after it. An Artifact whose bundle the new release refuses stays
-on its previous base; its activity record says why.
+on its previous base; its activity record says why. An upgrade or a
+`factory admin rebase` while the Installation is Paused (its Spend cap
+enforced) cannot redeploy anything: each rebase Revision fails with
+`Installation paused`, every Artifact stays live on its previous base, and
+the pass is run again with `factory admin rebase` once the Installation is
+serving.
 
 ```sh
 factory admin rebase --installation <handle>
@@ -83,8 +88,9 @@ one. Releases are ordered as semantic versions: `v0.1.0-rc.3` is older than
 
 A permanent input given with a different value is refused too, as on any
 run, with exit 37, `permanent_input`, before preflight and with nothing
-changed: `workspaceDomain`, `region`, `companyHost`, `artifactDomain` and
-`projectPrefix` name the Installation. The message names the input and
+changed: `workspaceDomain`, `region`, `companyHost`, `artifactDomain`,
+`projectPrefix` and the pre-created projects' names name the Installation.
+The message names the input and
 both values; drop it to resume
 ([Troubleshooting](troubleshooting.md#exit-37-permanent_input)).
 
@@ -95,7 +101,7 @@ changed by a re-run with the input's flag (or a `--config` file with the
 key): the run applies the new value and then stores it, and a later run
 without the flag keeps it.
 
-- `--billing-account <id>`: the three projects are linked to the new
+- `--billing-account <id>`: the projects are linked to the new
   account in the run's projects step, and the account is stored then.
 - `--admin-group <email>`: the services carry the new group from the
   run's second-phase apply (the plan shows the Control API's service
@@ -104,6 +110,26 @@ without the flag keeps it.
   store it; the progress says so, and the re-run needs the flag again.
 - `--artifact-capacity <n>`: the `artifact-capacity` Handoff asks for the
   new quota and is verified against it; stored in the projects step.
+- `--spend-cap <amount>`: the [Spend cap](install.md#spend-cap)'s budget
+  on the Artifacts project is created or updated to the new amount in
+  the run's spend-cap step, and the amount is stored then. An enforced
+  cap must be lifted first; `0` leaves an existing budget as it is.
+- `--source-built`: the build project is created, or adopted with
+  `--build-project`, in the run's projects step, and the switch is stored
+  then; the applies install the capability's resources and hand the
+  Control API the build project
+  ([Install](install.md#source-built-apps)). `--source-built=false`
+  removes the resources and keeps the project.
+- `--email-sender <address>`: the three sending services carry the new
+  mailbox from the run's second-phase apply (the plan shows the Control
+  API, the deploy worker and the sweep updated), and it is stored once
+  that apply has succeeded, like the Admin group. On an Installation that
+  had no sender this issues the [Email](handoffs/email.md) Handoff; on one
+  that had another, email is off again until the sweep has sent the test
+  mail as the new mailbox (the delegation covers the sender account, not
+  the mailbox, so no new console step is needed unless the mailbox does
+  not exist). A sender cannot be removed by a re-run: to turn email off,
+  a super admin revokes the delegation.
 
 Every run's plan lists the changes first, as `Input <key> (<flag>): from
 <stored> to <given>; applied by this run, then stored.`, so `--check`
@@ -118,25 +144,24 @@ factory admin install --installation <handle> --admin-group platform-admins@exam
 
 `factory admin config get --installation <handle>` prints the stored
 config, with `--json` as the one JSON object the state bucket holds: every
-input as stored, the organization, the three project IDs and the OAuth
+input as stored, the organization, the project IDs (the build project's
+among them once `--source-built` has been on) and the OAuth
 client's ID, and no secret. It reads the state bucket with your `gcloud`
 login, as `install` does. There is no `config set`: the re-run is the
 change.
 
-Five more inputs are accepted and stored for the releases that act on
-them, and the plan and `config get` report them as not yet effective:
-`spendCap` (`--spend-cap <amount>`, a whole number of the billing
-account's currency units; `0` is no cap), `viewingRecords`
-(`--viewing-records`, or `--viewing-records=false`),
-`viewingRecordsRetentionDays` (`--viewing-records-retention-days <days>`),
-`sourceBuilt` (`--source-built`, or `--source-built=false`) and
-`emailSender` (`--email-sender <address>`). Giving one changes nothing in
-the Installation yet ([What v1 does not do](what-v1-does-not-do.md)).
+`viewingRecords` (`--viewing-records`, or `--viewing-records=false`) and
+`viewingRecordsRetentionDays` (`--viewing-records-retention-days <days>`)
+are mutable like the rest: a re-run with the flag installs, removes or
+re-times the [viewing records](install.md#viewing-records), and stores
+the value once the second-phase apply has succeeded.
 
 The account that re-runs the installer needs roles in the Installation's
-three projects (what their Owner holds) and the Billing Account User role
+projects (what their Owner holds) and the Billing Account User role
 on its billing account; the Project Creator role on the organization is
-needed by the first install only.
+needed by the first install only, and by the re-run that creates the
+build project with `--source-built`, and not at all with
+[pre-created projects](prerequisites.md#pre-created-projects).
 
 ## What this release does not do yet
 

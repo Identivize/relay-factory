@@ -9,9 +9,10 @@ services ask Google whether that member is in the group, as themselves:
 each service runs as its own service account, and that account needs the
 pre-built Workspace admin role **Groups Reader** to read group membership.
 No domain-wide delegation is involved, and the role reads only groups:
-it cannot change anything. The Control API uses it for the Admin check,
-and the Hub uses the same role for "Shared with me" (a later release's
-page; this release's Hub only checks that it holds the role). Only a super
+it cannot change anything. The Control API uses it for the Admin check
+and to recognise the names a share gives, and the Hub uses the same role
+for its Shared with me page, asking whether the signed-in member is in
+each group an Artifact was shared with. Only a super
 admin can assign a Workspace admin role, so the installer cannot do it.
 
 ## Steps
