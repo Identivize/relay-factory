@@ -3,7 +3,7 @@ name: factory
 description: "Publish a folder as a Relay Factory Artifact with the factory CLI: run factory status first, sign in with factory login, publish with factory publish, read the --json result and the exit codes. Use when asked to publish, update, check or end an Artifact, or whenever the factory command is involved."
 license: Apache-2.0
 metadata:
-  version: "v0.1.0"
+  version: "v0.1.2"
 ---
 
 # factory: publish a folder as an Artifact

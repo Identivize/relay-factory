@@ -25,13 +25,13 @@ Or download a release archive for your machine and verify it. Replace
 `linux_arm64`, `windows_amd64.zip`, `windows_arm64.zip`):
 
 ```sh
-gh release download v0.1.0 --repo Identivize/relay-factory --pattern 'factory_*_darwin_arm64.tar.gz' --pattern checksums.txt --pattern checksums.txt.sigstore.json
+gh release download v0.1.2 --repo Identivize/relay-factory --pattern 'factory_*_darwin_arm64.tar.gz' --pattern checksums.txt --pattern checksums.txt.sigstore.json
 ```
 
 ```sh
 cosign verify-blob \
   --bundle checksums.txt.sigstore.json \
-  --certificate-identity 'https://github.com/Identivize/relay-artifactory/.github/workflows/release.yml@refs/tags/v0.1.0' \
+  --certificate-identity 'https://github.com/Identivize/relay-artifactory/.github/workflows/release.yml@refs/tags/v0.1.2' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   checksums.txt
 ```

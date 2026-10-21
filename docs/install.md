@@ -15,7 +15,7 @@ your OS and architecture (`darwin_amd64`, `linux_amd64`, `linux_arm64`,
 `windows_amd64.zip`, `windows_arm64.zip`).
 
 ```sh
-gh release download v0.1.0 --repo Identivize/relay-factory --pattern 'factory_*_darwin_arm64.tar.gz' --pattern checksums.txt --pattern checksums.txt.sigstore.json
+gh release download v0.1.2 --repo Identivize/relay-factory --pattern 'factory_*_darwin_arm64.tar.gz' --pattern checksums.txt --pattern checksums.txt.sigstore.json
 ```
 
 The checksums file is signed by the release workflow (cosign keyless): the
@@ -25,7 +25,7 @@ then the archive against the checksums.
 ```sh
 cosign verify-blob \
   --bundle checksums.txt.sigstore.json \
-  --certificate-identity 'https://github.com/Identivize/relay-artifactory/.github/workflows/release.yml@refs/tags/v0.1.0' \
+  --certificate-identity 'https://github.com/Identivize/relay-artifactory/.github/workflows/release.yml@refs/tags/v0.1.2' \
   --certificate-oidc-issuer https://token.actions.githubusercontent.com \
   checksums.txt
 ```
@@ -177,7 +177,7 @@ The run exits **0** when the Installation is ready: the `dns` and
 `oauth-client` Handoffs are verified and the Front Door's discovery
 document, `https://<company-host>/.well-known/relay-factory.json`, answers
 with the Control API's URL and the OAuth client. The report then says
-`Installation <handle> (release v0.1.0) is ready.` with every check `ok`,
+`Installation <handle> (release v0.1.2) is ready.` with every check `ok`,
 every step `done` and each Handoff `done`, except that
 `artifact-capacity` may still be pending: it waits on Google's review of
 the quota request and never holds the Installation up. Until it is
