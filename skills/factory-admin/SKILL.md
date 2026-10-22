@@ -3,7 +3,7 @@ name: factory-admin
 description: "Install, check or administer a Relay Factory Installation with the factory CLI: run factory admin install --check, read the installer's report and its Handoffs, hand the apply to the Operator, change a mutable input (billing account, Admin group, capacity, Spend cap) by a re-run, read the stored config with factory admin config get, read and change the Installation's policy with factory admin policy get and set, read its state with factory admin status, end any Artifact's Let early with factory admin end, and hand the Operator the uninstall (factory admin uninstall). Use when asked to install, check, upgrade, administer or uninstall a Relay Factory Installation, to change its inputs, to change its policy, or to take an Artifact down."
 license: Apache-2.0
 metadata:
-  version: "v0.1.2"
+  version: "v0.1.3"
 ---
 
 # factory-admin: install and administer an Installation
